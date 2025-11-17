@@ -19,6 +19,7 @@ I will update this repository **daily** with what i have *learned*, *practiced*,
 ---
 ### Repository Structure
 DevOps-Bootcamp
+```
 ├── Day1
 ├── Day2
 ├── Day3
@@ -26,7 +27,7 @@ DevOps-Bootcamp
 ├── projects/
 ├── workflows/
 └── README.md
-
+```
 
 ## Goals
 By the end of the session, I aim to:
