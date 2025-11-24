@@ -147,7 +147,8 @@ chmod +x onceserver-dashboard.sh
 ```bash
 ./onceserver-dashboard.sh
 ```
-
+### Output
+![alt text](images/task1.png)
 ---
 ---
 
@@ -241,16 +242,8 @@ chmod +x myip.sh
 
 ---
 
-## Example Output
-```
-========== MY SERVER IP ADDRESSES ==========
-Your Private IP:
-192.168.1.10
-
-Your Public IP:
-123.45.67.89
-============================================
-```
+## Output
+![alt text](images/task2.png)
 This output clearly separates private and public IPs for quick reference.
 
 
