@@ -1,0 +1,8 @@
+services:
+  not-nginx:
+    image: httpd
+    container_name: not-nginx
+    ports:
+      - "81:80"
+    volumes:
+      - ./index.html:/usr/local/apache2/htdocs/index.html

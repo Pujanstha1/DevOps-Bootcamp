@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pujan Shrestha — Portfolio</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="hero">
+    <img src="images/profile_pic.jpg" alt="Profile" class="avatar">
+    <div class="hero-text">
+      <h1>Pujan Shrestha</h1>
+      <p>DevOps Engineer | Cloud Architect | Portfolio</p>
+      <a class="btn" id="download-cv" href="Pujan_CV.pdf" download="Pujan_CV.pdf">Download CV</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="projects">
+      <h2>Selected Work</h2>
+      <div class="cards">
+        <article class="card">
+          <img src="images/Devops1.jpeg" alt="Project 1" class="thumb" onclick="openImage(this.src)">
+          <h3>Project One</h3>
+          <p>Interactive dashboard for visualising application numbers and metrics.</p>
+          <button class="btn small" onclick="openProject('https://example.com')">View live</button>
+        </article>
+
+        <article class="card">
+          <img src="images/what-is-docker.png" alt="Project 2" class="thumb" onclick="openImage(this.src)">
+          <h3>Project Two</h3>
+          <p>CI/CD pipeline automation and infrastructure as code.</p>
+          <button class="btn small" onclick="openProject('https://example.com')">View details</button>
+        </article>
+      </div>
+    </section>
+
+    <section class="contact">
+      <h2>Contact</h2>
+      <p>Email: <a href="mailto:pujan@example.com">pujanshrestha240@gmail.com</a></p>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
