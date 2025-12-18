@@ -1,0 +1,98 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Secure S3 bucket with encryption, versioning, HTTPS enforcement, and access logging
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: Globally unique name for the main S3 bucket
+
+  LogBucketName:
+    Type: String
+    Description: Globally unique name for the S3 access log bucket
+
+Resources:
+
+  # -------------------------------
+  # Log Bucket (for access logs)
+  # -------------------------------
+  LogBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Ref LogBucketName
+
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+
+  # -------------------------------
+  # Main Secure Bucket
+  # -------------------------------
+  SecureBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Ref BucketName
+
+      VersioningConfiguration:
+        Status: Enabled
+
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+
+      LoggingConfiguration:
+        DestinationBucketName: !Ref LogBucket
+        LogFilePrefix: access-logs/
+
+  # -------------------------------
+  # Enforce HTTPS Only
+  # -------------------------------
+  EnforceHTTPSPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SecureBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: EnforceTLS
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !Sub "${SecureBucket.Arn}"
+              - !Sub "${SecureBucket.Arn}/*"
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+
+Outputs:
+  SecureBucketName:
+    Description: Secure S3 bucket name
+    Value: !Ref SecureBucket
+
+  LogBucketName:
+    Description: Log S3 bucket name
+    Value: !Ref LogBucket
