@@ -1,0 +1,118 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Secure S3 Bucket with encryption, versioning, lifecycle rules,
+  public access blocked, and strict bucket policies.
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: Globally unique S3 bucket name
+
+  EnableAccessLogging:
+    Type: String
+    AllowedValues: [true, false]
+    Default: false
+    Description: Enable S3 access logging
+
+  LoggingBucketName:
+    Type: String
+    Default: ""
+    Description: Required if access logging is enabled
+
+Resources:
+
+  SecureS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+
+      VersioningConfiguration:
+        Status: Enabled
+
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+      LifecycleConfiguration:
+        Rules:
+          - Id: AbortIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+
+          - Id: ExpireNonCurrentVersions
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 30
+
+      LoggingConfiguration:
+        !If
+          - EnableLogging
+          - DestinationBucketName: !Ref LoggingBucketName
+            LogFilePrefix: s3-access-logs/
+          - !Ref "AWS::NoValue"
+
+Conditions:
+  EnableLogging: !Equals [!Ref EnableAccessLogging, true]
+
+  HasLoggingBucket:
+    !And
+      - !Condition EnableLogging
+      - !Not [!Equals [!Ref LoggingBucketName, ""]]
+
+  ValidLoggingConfig:
+    !Or
+      - !Not [!Condition EnableLogging]
+      - !Condition HasLoggingBucket
+
+Rules:
+  ValidateLoggingConfig:
+    Assertions:
+      - Assert: !Condition ValidLoggingConfig
+        AssertDescription: LoggingBucketName must be provided if access logging is enabled.
+
+  SecureBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SecureS3Bucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+
+          # Enforce TLS (HTTPS only)
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !Sub "${SecureS3Bucket.Arn}"
+              - !Sub "${SecureS3Bucket.Arn}/*"
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+
+          # Enforce server-side encryption on uploads
+          - Sid: DenyUnencryptedObjectUploads
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:PutObject"
+            Resource: !Sub "${SecureS3Bucket.Arn}/*"
+            Condition:
+              StringNotEquals:
+                s3:x-amz-server-side-encryption: AES256
+
+Outputs:
+  BucketName:
+    Description: Secure S3 Bucket Name
+    Value: !Ref SecureS3Bucket
+
+  BucketArn:
+    Description: Secure S3 Bucket ARN
+    Value: !GetAtt SecureS3Bucket.Arn
