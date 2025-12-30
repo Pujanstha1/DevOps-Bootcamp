@@ -50,20 +50,20 @@ data "aws_region" "current" {}
 
 #Key Pair
 resource "aws_key_pair" "lab_key" {
-  key_name   = "terraform-key"
-  public_key = file("~/.ssh/terraform-key.pub")
+  key_name   = var.key_name
+  public_key = file(var.ssh_public_key_path)
 }
 
 
 # VPC RESOURCES
 
 resource "aws_vpc" "lab_vpc" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_support   = true
-  enable_dns_hostnames = true
+  cidr_block           = var.vpc_cidr
+  enable_dns_support   = var.enable_dns_support
+  enable_dns_hostnames = var.enable_dns_hostnames
 
   tags = {
-    Name = "LabVPC"
+    Name = "${var.project_name}-LabVPC"
   }
 }
 
@@ -71,18 +71,18 @@ resource "aws_internet_gateway" "lab_igw" {
   vpc_id = aws_vpc.lab_vpc.id
 
   tags = {
-    Name = "LabInternetGateway"
+    Name = "${var.project_name}-LabInternetGateway"
   }
 }
 
 resource "aws_subnet" "lab_subnet" {
   vpc_id                  = aws_vpc.lab_vpc.id
-  cidr_block              = "10.0.0.0/24"
+  cidr_block              = var.subnet_cidr
   availability_zone       = data.aws_availability_zones.available.names[0]
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "LabSubnet"
+    Name = "${var.project_name}-LabSubnet"
   }
 }
 
@@ -90,7 +90,7 @@ resource "aws_route_table" "lab_route_table" {
   vpc_id = aws_vpc.lab_vpc.id
 
   tags = {
-    Name = "LabRouteTable"
+    Name = "${var.project_name}-LabRouteTable"
   }
 }
 
@@ -114,7 +114,7 @@ resource "aws_security_group" "lab_sg" {
   vpc_id      = aws_vpc.lab_vpc.id
 
   tags = {
-    Name = "LabSecurityGroup"
+    Name = "${var.project_name}-LabSecurityGroup"
   }
 }
 
@@ -148,16 +148,16 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_outbound" {
 
 resource "aws_instance" "lab_ec2" {
   ami                    = data.aws_ami.ubuntu.id
-  instance_type          = "t3.micro"
+  instance_type          = var.instance_type
   key_name               = aws_key_pair.lab_key.key_name
   subnet_id              = aws_subnet.lab_subnet.id
   vpc_security_group_ids = [aws_security_group.lab_sg.id]
 
   root_block_device {
-    volume_type           = "gp3"
-    volume_size           = 20
+    volume_type           = var.root_volume_type
+    volume_size           = var.root_volume_size
     delete_on_termination = true
-    encrypted             = true
+    encrypted             = var.enable_root_encryption
   }
 
   disable_api_termination              = false
@@ -176,7 +176,7 @@ resource "aws_instance" "lab_ec2" {
   
 
   tags = {
-    Name = "MyEC2"
+    Name = "${var.project_name}-MyEC2"
   }
 }
 
@@ -185,7 +185,7 @@ resource "aws_eip" "lab_eip" {
   instance = aws_instance.lab_ec2.id
 
   tags = {
-    Name = "LabElasticIP"
+    Name = "${var.project_name}-LabElasticIP"
   }
 
   depends_on = [aws_internet_gateway.lab_igw]
@@ -226,7 +226,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "log_bucket_encryp
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
+      sse_algorithm = var.s3_encryption_algorithm
     }
     bucket_key_enabled = true
   }
@@ -236,7 +236,7 @@ resource "aws_s3_bucket_versioning" "log_bucket_versioning" {
   bucket = aws_s3_bucket.log_bucket.id
 
   versioning_configuration {
-    status = "Enabled"
+    status = var.enable_s3_versioning
   }
 }
 
@@ -352,98 +352,3 @@ resource "aws_s3_bucket_policy" "enforce_https" {
 }
 
 
-# OUTPUTS
-
-output "deployment_summary" {
-  description = "Deployment summary"
-  value = {
-    region          = data.aws_region.current.region
-    account_id      = data.aws_caller_identity.current.account_id
-    deployment_time = timestamp()
-  }
-}
-
-output "ec2_details" {
-  description = "EC2 instance details"
-  value = {
-    instance_id       = aws_instance.lab_ec2.id
-    instance_type     = aws_instance.lab_ec2.instance_type
-    ami_id            = aws_instance.lab_ec2.ami
-    ami_name          = data.aws_ami.ubuntu.name
-    availability_zone = aws_instance.lab_ec2.availability_zone
-    private_ip        = aws_instance.lab_ec2.private_ip
-    public_ip         = aws_instance.lab_ec2.public_ip
-    elastic_ip        = aws_eip.lab_eip.public_ip
-    public_dns        = aws_instance.lab_ec2.public_dns
-    ssh_command       = "ssh -i ~/.ssh/my-terraform-key.pem ubuntu@${aws_eip.lab_eip.public_ip}"
-    http_url          = "http://${aws_eip.lab_eip.public_ip}"
-  }
-}
-
-output "vpc_details" {
-  description = "VPC and networking details"
-  value = {
-    vpc_id              = aws_vpc.lab_vpc.id
-    vpc_cidr            = aws_vpc.lab_vpc.cidr_block
-    subnet_id           = aws_subnet.lab_subnet.id
-    subnet_cidr         = aws_subnet.lab_subnet.cidr_block
-    internet_gateway_id = aws_internet_gateway.lab_igw.id
-    route_table_id      = aws_route_table.lab_route_table.id
-    security_group_id   = aws_security_group.lab_sg.id
-  }
-}
-
-output "s3_details" {
-  description = "S3 bucket details"
-  value = {
-    secure_bucket_name   = aws_s3_bucket.secure_bucket.id
-    secure_bucket_arn    = aws_s3_bucket.secure_bucket.arn
-    secure_bucket_region = aws_s3_bucket.secure_bucket.region
-    log_bucket_name      = aws_s3_bucket.log_bucket.id
-    log_bucket_arn       = aws_s3_bucket.log_bucket.arn
-    upload_test_command  = "echo 'test' | aws s3 cp - s3://${aws_s3_bucket.secure_bucket.id}/test.txt"
-    list_bucket_command  = "aws s3 ls s3://${aws_s3_bucket.secure_bucket.id}/"
-  }
-}
-
-output "validation_commands" {
-  description = "Commands to validate the deployment"
-  value       = <<-EOT
-    # Validate EC2 instance
-    curl http://${aws_eip.lab_eip.public_ip}
-    
-    # SSH to EC2
-    ssh -i ~/.ssh/my-terraform-key.pem ubuntu@${aws_eip.lab_eip.public_ip}
-    
-    # Test S3 upload
-    echo "terraform test" > test.txt
-    aws s3 cp test.txt s3://${aws_s3_bucket.secure_bucket.id}/test.txt
-    aws s3 ls s3://${aws_s3_bucket.secure_bucket.id}/
-    
-    # Verify HTTPS enforcement (should fail)
-    aws s3api put-object --bucket ${aws_s3_bucket.secure_bucket.id} --key test2.txt --body test.txt --no-sign-request
-    
-    # Check logs bucket
-    aws s3 ls s3://${aws_s3_bucket.log_bucket.id}/access-logs/
-  EOT
-}
-
-output "state_management_info" {
-  description = "Terraform state management information"
-  value = {
-    state_location      = "Local: terraform.tfstate (default)"
-    state_backup        = "Local: terraform.tfstate.backup"
-    remote_backend_info = "Configure S3 backend in terraform block to enable remote state"
-    state_commands = {
-      list_resources = "terraform state list"
-      show_resource  = "terraform state show aws_instance.lab_ec2"
-      pull_state     = "terraform state pull > state.json"
-      refresh_state  = "terraform refresh"
-    }
-  }
-}
-
-output "cleanup_command" {
-  description = "Command to destroy all resources"
-  value       = "terraform destroy -auto-approve"
-}
