@@ -210,7 +210,6 @@ resource "aws_vpc" "lab_vpc" {
 
 **Resources created:** AWS VPC with ID like `vpc-0a1b2c3d4e5f6g7h8`
 
-**Cost:** Free
 
 ---
 
@@ -234,8 +233,6 @@ resource "aws_internet_gateway" "lab_igw" {
 **Analogy:** The IGW is like the "front door" of your VPC, connecting it to the outside world.
 
 **Resources created:** AWS Internet Gateway with ID like `igw-0a1b2c3d4e5f6g7h8`
-
-**Cost:** Free
 
 ---
 
@@ -273,7 +270,6 @@ resource "aws_subnet" "lab_subnet" {
 
 **Resources created:** AWS Subnet with ID like `subnet-0a1b2c3d4e5f6g7h8`
 
-**Cost:** Free
 
 ---
 
@@ -295,8 +291,6 @@ resource "aws_route_table" "lab_route_table" {
 - Acts as a "traffic controller" for the subnet
 
 **Resources created:** AWS Route Table with ID like `rtb-0a1b2c3d4e5f6g7h8`
-
-**Cost:** Free
 
 ---
 
@@ -323,8 +317,6 @@ resource "aws_route" "lab_route" {
 
 **Resources created:** Route entry in the route table
 
-**Cost:** Free
-
 ---
 
 ### 6. Route Table Association
@@ -344,8 +336,6 @@ resource "aws_route_table_association" "lab_subnet_association" {
 **Analogy:** This is like assigning a specific set of directions to everyone in a neighborhood.
 
 **Resources created:** Route Table Association
-
-**Cost:** Free
 
 ---
 
@@ -374,8 +364,6 @@ resource "aws_security_group" "lab_sg" {
 
 **Resources created:** AWS Security Group with ID like `sg-0a1b2c3d4e5f6g7h8`
 
-**Cost:** Free
-
 ---
 
 ### 2. SSH Ingress Rule
@@ -403,8 +391,6 @@ cidr_ipv4 = "203.0.113.0/24"  # Your office IP range
 
 **Resources created:** Ingress rule in the security group
 
-**Cost:** Free
-
 ---
 
 ### 3. HTTP Ingress Rule
@@ -428,8 +414,6 @@ resource "aws_vpc_security_group_ingress_rule" "allow_http" {
 **Use Case:** Hosting public websites or web applications.
 
 **Resources created:** Ingress rule in the security group
-
-**Cost:** Free
 
 ---
 
@@ -456,8 +440,6 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_outbound" {
 - Respond to inbound connections (stateful return traffic)
 
 **Resources created:** Egress rule in the security group
-
-**Cost:** Free
 
 ---
 
@@ -570,8 +552,6 @@ resource "aws_instance" "lab_ec2" {
 - EC2 Instance with ID like `i-0a1b2c3d4e5f6g7h8`
 - EBS Volume (20GB gp3)
 
-**Cost:** ~$7.50/month (after free tier) + $1.60/month for storage
-
 ---
 
 ### 2. Elastic IP
@@ -619,10 +599,6 @@ Instance start: Public IP = 54.123.45.67  ← Same!
 
 **Resources created:** Elastic IP with allocation ID like `eipalloc-0a1b2c3d4e5f6g7h8`
 
-**Cost:** 
-- Free when attached to a running instance
-- ~$0.005/hour (~$3.60/month) when unattached or instance is stopped
-
 ---
 
 ## S3 Bucket Resources
@@ -662,11 +638,6 @@ resource "aws_s3_bucket" "log_bucket" {
 - This keeps the same bucket even if timestamp changes
 
 **Resources created:** S3 bucket
-
-**Cost:** 
-- $0.023 per GB/month (Standard storage)
-- First 50 GB is free tier
-
 ---
 
 #### 2. Log Bucket Ownership Controls
@@ -689,9 +660,6 @@ resource "aws_s3_bucket_ownership_controls" "log_bucket_ownership" {
 **Why needed:** AWS S3 logging service writes objects with its own ownership. This ensures you own the log files.
 
 **Resources created:** Ownership control configuration
-
-**Cost:** Free
-
 ---
 
 #### 3. Log Bucket ACL
@@ -715,9 +683,6 @@ resource "aws_s3_bucket_acl" "log_bucket_acl" {
 - Bucket owner: FULL_CONTROL
 
 **Resources created:** Bucket ACL configuration
-
-**Cost:** Free
-
 ---
 
 #### 4. Log Bucket Encryption
@@ -752,8 +717,6 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "log_bucket_encryp
 
 **Resources created:** Encryption configuration
 
-**Cost:** Free (for AES256 encryption)
-
 ---
 
 #### 5. Log Bucket Versioning
@@ -786,8 +749,6 @@ Delete log-file.txt ← Creates delete marker, file still recoverable
 - Compliance requirements
 
 **Resources created:** Versioning configuration
-
-**Cost:** Storage cost for each version retained
 
 ---
 
@@ -827,9 +788,7 @@ resource "aws_s3_bucket_public_access_block" "log_bucket_public_access" {
 - Restricts access to bucket owners and AWS services
 - Additional layer of protection
 
-**Resources created:** Public access block configuration
-
-**Cost:** Free
+**Resources created:** Public access block configuration.
 
 ---
 
@@ -879,8 +838,6 @@ Day 90:  Current version deleted automatically
 
 **Resources created:** Lifecycle policy
 
-**Cost:** Free (reduces storage costs)
-
 ---
 
 ### Secure Bucket Resources
@@ -915,8 +872,6 @@ resource "aws_s3_bucket" "secure_bucket" {
 
 **Resources created:** S3 bucket
 
-**Cost:** $0.023 per GB/month (Standard storage)
-
 ---
 
 #### 9. Secure Bucket Versioning
@@ -945,8 +900,6 @@ resource "aws_s3_bucket_versioning" "secure_bucket_versioning" {
 ```
 
 **Resources created:** Versioning configuration
-
-**Cost:** Storage for each version
 
 ---
 
@@ -977,8 +930,6 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "secure_bucket_enc
 
 **Resources created:** Encryption configuration
 
-**Cost:** Free
-
 ---
 
 #### 11. Secure Bucket Public Access Block
@@ -1001,3 +952,28 @@ resource "aws_s3_bucket_public_access_block" "secure_bucket_public_access" {
 
 **All four settings set to `true`:**
 - Maximum
+
+
+![alt text](images/image.png)
+![alt text](images/image-1.png)
+![alt text](images/image-2.png)
+![alt text](images/image-3.png)
+![alt text](images/image-4.png)
+![alt text](images/image-5.png)
+![alt text](images/image-6.png)
+![alt text](images/image-7.png)
+![alt text](images/image-8.png)
+![alt text](images/image-9.png)
+![alt text](images/image-10.png)
+![alt text](images/image-11.png)
+![alt text](images/image-12.png)
+![alt text](images/image-13.png)
+![alt text](images/image-14.png)
+![alt text](images/image-15.png)
+![alt text](images/image-16.png)
+![alt text](images/image-17.png)
+![alt text](images/image-18.png)
+![alt text](images/image-19.png)
+![alt text](images/image-20.png)
+![alt text](images/image-21.png)
+![alt text](images/image-22.png)

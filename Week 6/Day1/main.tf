@@ -50,7 +50,7 @@ data "aws_region" "current" {}
 
 #Key Pair
 resource "aws_key_pair" "lab_key" {
-  key_name   = "terraform-key"
+  key_name   = var.key_name
   public_key = file("~/.ssh/terraform-key.pub")
 }
 
@@ -63,7 +63,7 @@ resource "aws_vpc" "lab_vpc" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "LabVPC"
+    Name = var.vpc_name
   }
 }
 
@@ -71,7 +71,7 @@ resource "aws_internet_gateway" "lab_igw" {
   vpc_id = aws_vpc.lab_vpc.id
 
   tags = {
-    Name = "LabInternetGateway"
+    Name = var.igw
   }
 }
 
@@ -162,8 +162,6 @@ resource "aws_instance" "lab_ec2" {
 
   disable_api_termination              = false
   instance_initiated_shutdown_behavior = "stop"
-
-
 
   user_data = <<-EOF
               #!/bin/bash
@@ -350,7 +348,6 @@ resource "aws_s3_bucket_policy" "enforce_https" {
     ]
   })
 }
-
 
 # OUTPUTS
 
