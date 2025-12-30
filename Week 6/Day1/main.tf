@@ -50,7 +50,7 @@ data "aws_region" "current" {}
 
 #Key Pair
 resource "aws_key_pair" "lab_key" {
-  key_name   = var.key_name
+  key_name   = "terraform-key"
   public_key = file("~/.ssh/terraform-key.pub")
 }
 
@@ -63,7 +63,7 @@ resource "aws_vpc" "lab_vpc" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = var.vpc_name
+    Name = "LabVPC"
   }
 }
 
@@ -71,7 +71,7 @@ resource "aws_internet_gateway" "lab_igw" {
   vpc_id = aws_vpc.lab_vpc.id
 
   tags = {
-    Name = var.igw
+    Name = "LabInternetGateway"
   }
 }
 
