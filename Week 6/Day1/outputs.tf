@@ -23,12 +23,21 @@ output "deployment_summary" {
     value = {
         project_name = var.project_name
         region = data.aws_region.current.name
-        vpc_id = aws_vpc.lab_vpc.id
-        instance_id = aws_instance.lab_ec2.id
-        instance_type = aws_instance.lab_ec2.instance_type
-        public_ip = aws_eip.lab_eip.public_key
+        public_ip = module.ec2_instance.aws_eip
         log_bucket = aws_s3_bucket.log_bucket.id
         secure_bucket = aws_s3_bucket.secure_bucket.id
     }
 
+}
+
+output "log_bucket_name" {
+  value = module.s3_bucket.log_bucket_name
+}
+
+output "secure_bucket_name" {
+  value = module.s3_bucket.secure_bucket_name
+}
+
+output "secure_bucket_arn" {
+  value = module.s3_bucket.secure_bucket_arn
 }
